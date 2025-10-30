@@ -1,10 +1,11 @@
 """Core clock functionality for generating analogue clock SVGs."""
 
 import re
+from tkinter import E
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from datetime import time
-from typing import Union, Tuple, Optional
+from typing import Dict, Union, Tuple, Optional
 
 
 @dataclass
@@ -12,19 +13,63 @@ class AnalogueClock:
     """Generate analogue clock SVG with specified time."""
 
     svg: str = field(default_factory=lambda: DEFAULT_CLOCK_SVG)
+
     transform_center: Optional[Tuple[float, float]] = None
+    transform_center_second: Optional[Tuple[float, float]] = None
+    transform_center_minute: Optional[Tuple[float, float]] = None
+    transform_center_hour: Optional[Tuple[float, float]] = None
 
     def __post_init__(self):
         """Initialize derived attributes after dataclass initialization."""
         # Validate that required hand elements are present
         self._validate_svg()
 
-        # Parse SVG to extract transform centers
-        self._extract_transform_centers()
+        transform_center_elem = self._find_element_by_id(
+            ET.fromstring(self.svg), "transform-center"
+        )
+        transform_center_seconds_elem = self._find_element_by_id(
+            ET.fromstring(self.svg), "transform-center-second"
+        )
+        transform_center_minute_elem = self._find_element_by_id(
+            ET.fromstring(self.svg), "transform-center-minute"
+        )
+        transform_center_hour_elem = self._find_element_by_id(
+            ET.fromstring(self.svg), "transform-center-hour"
+        )
 
-        # If transform_center not provided, calculate from SVG size
+        # If transform_center not provided, try to extract from SVG, else take as exact center of SVG
+        if self.transform_center is None and transform_center_elem is not None:
+            self.transform_center = self._extract_transform_center_of(
+                transform_center_elem
+            )
         if self.transform_center is None:
             self.transform_center = self._get_svg_center()
+
+        ####
+
+        if (
+            self.transform_center_second is None
+            and transform_center_seconds_elem is not None
+        ):
+            self.transform_center_second = self._extract_transform_center_of(
+                transform_center_seconds_elem
+            )
+
+        if (
+            self.transform_center_minute is None
+            and transform_center_minute_elem is not None
+        ):
+            self.transform_center_minute = self._extract_transform_center_of(
+                transform_center_minute_elem
+            )
+
+        if (
+            self.transform_center_hour is None
+            and transform_center_hour_elem is not None
+        ):
+            self.transform_center_hour = self._extract_transform_center_of(
+                transform_center_hour_elem
+            )
 
     def _validate_svg(self):
         """
@@ -61,62 +106,21 @@ class AnalogueClock:
                 f"Required IDs are: hour-hand, minute-hand (second-hand is optional)"
             )
 
-    def _extract_transform_centers(self):
-        """
-        Extract transform center coordinates from SVG elements.
+    def _extract_transform_center_of(
+        self, elem: ET.Element
+    ) -> Optional[Tuple[float, float]]:
+        center = None
+        cx = elem.get("cx")
+        cy = elem.get("cy")
+        x = elem.get("x")
+        y = elem.get("y")
 
-        Looks for elements with IDs:
-        - transform-center: General transform center for all hands
-        - transform-center-hour: Specific center for hour hand
-        - transform-center-minute: Specific center for minute hand
-        - transform-center-second: Specific center for second hand
-
-        Hand-specific centers override the general transform-center.
-        Centers are extracted from cx/cy attributes or x/y attributes.
-        """
-        try:
-            root = ET.fromstring(self.svg)
-        except ET.ParseError:
-            # If SVG is invalid, this will be caught in _validate_svg
-            return
-
-        # Initialize transform center dictionaries
-        self._transform_centers = {}
-        general_center = None
-
-        # Find transform center elements
-        for elem in root.iter():
-            elem_id = elem.get("id")
-            if not elem_id:
-                continue
-
-            # Extract coordinates from element
-            center = None
-            cx = elem.get("cx")
-            cy = elem.get("cy")
-            x = elem.get("x")
-            y = elem.get("y")
-
-            if cx and cy:
-                center = (float(cx), float(cy))
-            elif x and y:
-                center = (float(x), float(y))
-
-            # Store centers based on ID
-            if elem_id == "transform-center" and center:
-                general_center = center
-            elif elem_id == "transform-center-hour" and center:
-                self._transform_centers["hour"] = center
-            elif elem_id == "transform-center-minute" and center:
-                self._transform_centers["minute"] = center
-            elif elem_id == "transform-center-second" and center:
-                self._transform_centers["second"] = center
-
-        # Apply general center as fallback for hands without specific centers
-        if general_center:
-            for hand in ["hour", "minute", "second"]:
-                if hand not in self._transform_centers:
-                    self._transform_centers[hand] = general_center
+        if cx and cy:
+            center = (float(cx), float(cy))
+            return center
+        elif x and y:
+            center = (float(x), float(y))
+            return center
 
     def _get_svg_center(self) -> Tuple[float, float]:
         """
@@ -148,6 +152,21 @@ class AnalogueClock:
             return (width_val / 2, height_val / 2)
 
         raise ValueError("SVG must have either viewBox or width/height attributes.")
+
+    @property
+    def transform_center_by_hand_type(self) -> Dict[str, Tuple[float, float]]:
+        assert self.transform_center is not None
+        return {
+            "hour": self.transform_center_hour
+            if self.transform_center_hour is not None
+            else self.transform_center,
+            "minute": self.transform_center_minute
+            if self.transform_center_minute is not None
+            else self.transform_center,
+            "second": self.transform_center_second
+            if self.transform_center_second is not None
+            else self.transform_center,
+        }
 
     def _calculate_angles(self, clock_time: time) -> Tuple[float, float, float]:
         """
@@ -237,17 +256,12 @@ class AnalogueClock:
             angle: Rotation angle in degrees
             hand_type: Type of hand ('hour', 'minute', or 'second')
         """
+
         # Get the center point - use hand-specific center if available, otherwise fall back to instance's transform_center
         style = element.get("style", "")
 
         # Determine which transform center to use
-        if hasattr(self, "_transform_centers") and hand_type in self._transform_centers:
-            center_x, center_y = self._transform_centers[hand_type]
-        else:
-            assert self.transform_center is not None, (
-                "transform_center should be set in __post_init__"
-            )
-            center_x, center_y = self.transform_center
+        center_x, center_y = self.transform_center_by_hand_type[hand_type]
 
         # Add or update transform-origin if not present
         if "transform-origin" not in style:
