@@ -32,29 +32,34 @@ def main():
         sys.exit(1)
 
     # Example 1: Help
-    run_command("python3 main.py --help", "Display help information")
+    run_command("analogueclock --help", "Display help information")
 
     # Example 2: Current time to stdout
     run_command(
-        "python3 main.py test_clock.svg | head -20",
+        "analogueclock test_clock.svg | head -20",
         "Generate clock with current time (showing first 20 lines)",
     )
 
     # Example 3: Specific time to file
     run_command(
-        "python3 main.py test_clock.svg --time 15:30:45 --output demo_clock_1.svg",
+        "analogueclock test_clock.svg --time 15:30:45 --output demo_clock_1.svg",
         "Generate clock showing 15:30:45 and save to demo_clock_1.svg",
     )
 
     # Example 4: Noon to file
     run_command(
-        "python3 main.py test_clock.svg -t 12:00:00 -o demo_clock_2.svg",
+        "analogueclock test_clock.svg -t 12:00:00 -o demo_clock_2.svg",
         "Generate clock showing noon (using short options)",
     )
 
     # Example 5: Morning time
     run_command(
-        "python3 main.py test_clock.svg -t 09:15:30 -o demo_clock_3.svg",
+        "analogueclock test_clock.svg -t 09:15:30 -o demo_clock_3.svg",
+        "Generate clock showing 09:15:30",
+    )
+
+    run_command(
+        "analogueclock test_transform_centers.svg -t 09:15:30 -o demo_clock_4.svg",
         "Generate clock showing 09:15:30",
     )
 
@@ -63,6 +68,7 @@ def main():
     print("  - demo_clock_1.svg (15:30:45)")
     print("  - demo_clock_2.svg (12:00:00)")
     print("  - demo_clock_3.svg (09:15:30)")
+    print("  - demo_clock_4.svg (09:15:30)")
     print("=" * 60)
 
 
