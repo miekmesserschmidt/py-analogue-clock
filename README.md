@@ -1,20 +1,12 @@
 # py-analogue-clock
 
-A Python library for generating SVG analogue clock faces displaying specified times.
+A Python library and cli for generating SVG analogue clock faces displaying specified times.
 
 ## Features
 
 - 🕐 Generate analogue clock SVGs for any time
-- 🎨 Use the default elegant clock face or provide your own custom SVG
-- ⚡ Fast and lightweight - uses only standard library XML parsing
-- 🎯 Precise angle calculations for hour, minute, and second hands
-- 🔄 Automatic SVG center detection from viewBox or width/height attributes
-- 🎛️ Optional custom transform center for non-standard layouts
-- ✅ SVG validation ensures required hand elements are present
-- 📐 Dataclass-based API for clean, immutable clock instances
-- 💻 Command-line interface for easy SVG generation
-- ✅ Fully tested with comprehensive pytest suite
-- 📦 Simple, clean API
+- Use the default clock face or provide your own custom SVG
+- Can be used as library, or cli
 
 ## Installation
 
@@ -37,17 +29,18 @@ pip install -e ".[dev]"
 Generate a clock SVG from the command line:
 
 ```bash
+# Get help
+analogueclock --help
+
 # Show current time (output to stdout)
-python main.py test_clock.svg
+analogueclock test_clock.svg
 
 # Show specific time
-python main.py test_clock.svg --time 15:30:45
+analogueclock test_clock.svg --time 15:30:45
 
 # Save to file
-python main.py test_clock.svg --time 12:00:00 --output clock_noon.svg
+analogueclock test_clock.svg --time 12:00:00 --output clock_noon.svg
 
-# Get help
-python main.py --help
 ```
 
 ### Python Library
@@ -113,7 +106,7 @@ clock = AnalogueClock(svg=custom_svg)
 svg = clock.generate("12:30:00")
 ```
 
-**Important**: The SVG **must** contain elements with IDs `hour-hand`, `minute-hand`, and `second-hand`. If any are missing, a `ValueError` will be raised during initialization:
+**Important**: The SVG **must** contain elements with IDs `hour-hand`, `minute-hand`. The ID`second-hand` is optional. If any are missing, a `ValueError` will be raised during initialization:
 
 ```python
 # This will raise ValueError: SVG is missing required elements
@@ -245,13 +238,13 @@ The package includes a CLI tool for generating clock SVGs from the command line.
 
 ```bash
 # Display current time (output to stdout)
-python main.py my_clock.svg
+analogueclock my_clock.svg
 
 # Display specific time
-python main.py my_clock.svg --time 15:30:45
+analogueclock my_clock.svg --time 15:30:45
 
 # Save to file
-python main.py my_clock.svg --time 12:00:00 --output clock_noon.svg
+analogueclock my_clock.svg --time 12:00:00 --output clock_noon.svg
 ```
 
 ### CLI Options
@@ -264,15 +257,15 @@ python main.py my_clock.svg --time 12:00:00 --output clock_noon.svg
 
 ```bash
 # Generate clock showing current time, save to file
-python main.py test_clock.svg -o current_time.svg
+analogueclock test_clock.svg -o current_time.svg
 
 # Generate multiple times
-python main.py test_clock.svg -t 09:15:00 -o morning.svg
-python main.py test_clock.svg -t 14:30:00 -o afternoon.svg
-python main.py test_clock.svg -t 21:45:00 -o evening.svg
+analogueclock test_clock.svg -t 09:15:00 -o morning.svg
+analogueclock test_clock.svg -t 14:30:00 -o afternoon.svg
+analogueclock test_clock.svg -t 21:45:00 -o evening.svg
 
 # Pipe to other tools
-python main.py test_clock.svg -t 12:00:00 | some-svg-processor
+analogueclock test_clock.svg -t 12:00:00 | some-svg-processor
 ````
 
 ### CLI Options
@@ -285,18 +278,18 @@ python main.py test_clock.svg -t 12:00:00 | some-svg-processor
 
 ```bash
 # Generate clock showing current time, save to file
-python main.py test_clock.svg -o current_time.svg
+analogueclock test_clock.svg -o current_time.svg
 
 # Generate multiple times
-python main.py test_clock.svg -t 09:15:00 -o morning.svg
-python main.py test_clock.svg -t 14:30:00 -o afternoon.svg
-python main.py test_clock.svg -t 21:45:00 -o evening.svg
+analogueclock test_clock.svg -t 09:15:00 -o morning.svg
+analogueclock test_clock.svg -t 14:30:00 -o afternoon.svg
+analogueclock test_clock.svg -t 21:45:00 -o evening.svg
 
 # Pipe to other tools
-python main.py test_clock.svg -t 12:00:00 | some-svg-processor
+analogueclock test_clock.svg -t 12:00:00 | some-svg-processor
 
 # View help
-python main.py --help
+analogueclock --help
 ```
 
 ## How It Works
@@ -312,160 +305,14 @@ The library works by:
 4. **Applying** CSS transforms to rotate each hand around the clock center (or custom transform center)
 5. **Returning** the modified SVG as a string
 
-### Angle Calculations
-
-```python
-# Example: 3:15:30
-hour_angle = 3 * 30 + 15 * 0.5 = 97.5°
-minute_angle = 15 * 6 + 30 * 0.1 = 93°
-second_angle = 30 * 6 = 180°
-```
-
-### SVG Center Detection
-
-The library automatically extracts the center point:
-
-1. **From viewBox**: `viewBox="0 0 300 300"` → center is (150, 150)
-2. **From width/height**: `width="400" height="400"` → center is (200, 200)
-3. **Handles units**: `width="500px"` → strips units and uses 500
-4. **Fallback**: If neither is available, defaults to (150, 150)
-
-## API Reference
-
-### `AnalogueClock`
-
-`AnalogueClock` is a dataclass with the following attributes:
-
-#### `svg: str`
-
-The SVG template string containing elements with IDs `hour-hand`, `minute-hand`, and `second-hand`.
-Defaults to a built-in clock face if not provided.
-
-#### `transform_center: Optional[Tuple[float, float]]`
-
-The (x, y) coordinates for the rotation center of clock hands.
-If `None` (default), the center is automatically calculated from the SVG's `viewBox` or `width`/`height` attributes.
-
-#### Creating an AnalogueClock
-
-```python
-# Using defaults
-clock = AnalogueClock()
-
-# With custom SVG
-clock = AnalogueClock(svg=my_svg_string)
-
-# With custom SVG and transform center
-clock = AnalogueClock(svg=my_svg_string, transform_center=(100.0, 100.0))
-```
-
-#### `generate(clock_time: Union[time, str]) -> str`
-
-Generate an SVG displaying the specified time.
-
-- **Parameters:**
-  - `clock_time` (Union[time, str]): Time to display. Can be a `datetime.time` object or string in "HH:MM:SS" or "HH:MM" format.
-- **Returns:**
-  - str: SVG content with clock hands positioned for the specified time.
-
-#### `generate(clock_time: Union[time, str]) -> str`
-
-Generate an SVG displaying the specified time.
-
-- **Parameters:**
-  - `clock_time` (Union[time, str]): Time to display. Can be a `datetime.time` object or string in "HH:MM:SS" or "HH:MM" format.
-- **Returns:**
-
-  - str: SVG content with clock hands positioned for the specified time.
-
-- **Examples:**
-  ```python
-  svg = clock.generate(time(3, 15, 30))
-  svg = clock.generate("14:30:45")
-  svg = clock.generate("09:15")
-  ```
-
-## Default Clock Face
-
-The library includes a beautiful default clock face with:
-
-- Classic round design with 140px radius
-- Hour markers at 12, 3, 6, and 9 o'clock
-- Numbers at key positions
-- Black hour and minute hands
-- Red second hand
-- Centered dot at the pivot point
-- Clean, minimal styling
-
-## Development
-
 ### Running Tests
 
 ```bash
 pytest
 ```
 
-### Running Tests with Coverage
-
-```bash
-pytest --cov=analogue_clock --cov-report=html
-```
-
-### Project Structure
-
-```
-py-analogue-clock/
-├── analogue_clock/
-│   ├── __init__.py
-│   └── clock.py          # Main clock implementation
-├── tests/
-│   ├── __init__.py
-│   └── test_clock.py     # Comprehensive test suite
-├── main.py               # Example usage
-├── pyproject.toml        # Project configuration
-└── README.md
-```
-
 ## Requirements
 
-- Python >= 3.8
-- svgwrite >= 1.4.3 (installed automatically)
+- Python >= 3.14
+- svgwrite >= 1.4.3
 - pytest >= 8.3.5 (for development)
-
-## Testing
-
-The library includes a comprehensive test suite covering:
-
-- ✅ Initialization with default and custom SVGs
-- ✅ Angle calculations for all times
-- ✅ 12-hour clock wrapping (15:00 = 3:00)
-- ✅ String time parsing (HH:MM:SS and HH:MM)
-- ✅ Edge cases (midnight, noon, 23:59:59)
-- ✅ XML/SVG validity
-- ✅ Transform application
-- ✅ Multiple generations
-- ✅ Missing hand elements
-
-Run with: `pytest -v`
-
-## License
-
-MIT License
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## Examples
-
-Check out `main.py` for complete working examples:
-
-```bash
-python main.py
-```
-
-This will generate three example clock SVGs:
-
-- `clock_3_15_30.svg` - 3:15:30
-- `clock_12_00_00.svg` - 12:00:00
-- `clock_6_30_45.svg` - 6:30:45
