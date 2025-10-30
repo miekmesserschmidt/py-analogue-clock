@@ -2,6 +2,9 @@
 
 A Python library and cli for generating SVG analogue clock faces displaying specified times.
 
+![Test Clock](test_clock.svg)
+![Test Clock - Current Time](test_clock_current_time.svg)
+
 ## Features
 
 - 🕐 Generate analogue clock SVGs for any time
