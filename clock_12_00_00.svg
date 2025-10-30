@@ -1,0 +1,41 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
+  <ns0:defs>
+    <ns0:style>
+      .clock-face { fill: white; stroke: black; stroke-width: 2; }
+      .hour-marker { fill: black; }
+      .number { font-family: Arial, sans-serif; font-size: 20px; text-anchor: middle; dominant-baseline: middle; }
+      .hand { stroke-linecap: round; }
+      .hour-hand { stroke: black; stroke-width: 6; }
+      .minute-hand { stroke: black; stroke-width: 4; }
+      .second-hand { stroke: red; stroke-width: 2; }
+      .center-dot { fill: black; }
+    </ns0:style>
+  </ns0:defs>
+  
+  
+  <ns0:circle class="clock-face" cx="150" cy="150" r="140" />
+  
+  
+  <ns0:rect class="hour-marker" x="148" y="20" width="4" height="15" />
+  <ns0:rect class="hour-marker" x="148" y="265" width="4" height="15" />
+  <ns0:rect class="hour-marker" x="20" y="148" width="15" height="4" />
+  <ns0:rect class="hour-marker" x="265" y="148" width="15" height="4" />
+  
+  
+  <ns0:text class="number" x="150" y="40">12</ns0:text>
+  <ns0:text class="number" x="220" y="70">1</ns0:text>
+  <ns0:text class="number" x="260" y="150">3</ns0:text>
+  <ns0:text class="number" x="220" y="230">5</ns0:text>
+  <ns0:text class="number" x="150" y="260">6</ns0:text>
+  <ns0:text class="number" x="80" y="230">7</ns0:text>
+  <ns0:text class="number" x="40" y="150">9</ns0:text>
+  <ns0:text class="number" x="80" y="70">11</ns0:text>
+  
+  
+  <ns0:line id="hour-hand" class="hand hour-hand" x1="150" y1="150" x2="150" y2="80" style="transform-origin: 150px 150px; transform: rotate(0.0deg)" />
+  <ns0:line id="minute-hand" class="hand minute-hand" x1="150" y1="150" x2="150" y2="50" style="transform-origin: 150px 150px; transform: rotate(0.0deg)" />
+  <ns0:line id="second-hand" class="hand second-hand" x1="150" y1="150" x2="150" y2="40" style="transform-origin: 150px 150px; transform: rotate(0deg)" />
+  
+  
+  <ns0:circle class="center-dot" cx="150" cy="150" r="5" />
+</ns0:svg>
