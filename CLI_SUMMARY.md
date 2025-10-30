@@ -13,8 +13,7 @@
 - **Required argument**: Input SVG file path
 - **Optional `--time` / `-t`**: Time in HH:MM:SS format (defaults to current system time)
 - **Optional `--output` / `-o`**: Output file path (defaults to stdout)
-- **Optional `--center` / `-c`**: Custom transform center as X,Y coordinates (defaults to auto-detected center)
-- Error handling for invalid files, times, centers, and other exceptions
+- Error handling for invalid files, times, and other exceptions
 - Informative status messages printed to stderr (so stdout contains only SVG)
 - Built-in help with `--help`
 
@@ -29,9 +28,6 @@ python main.py test_clock.svg --time 15:30:45
 
 # Save to file
 python main.py test_clock.svg --time 12:00:00 --output clock_noon.svg
-
-# Custom transform center
-python main.py test_clock.svg -t 15:30:45 -c 100,100 -o clock.svg
 
 # Short options
 python main.py test_clock.svg -t 09:15:00 -o morning.svg
@@ -66,7 +62,7 @@ A demonstration script that shows the CLI in action:
 The CLI leverages these dataclass features:
 
 - **Automatic SVG center detection** from `viewBox` or `width`/`height` attributes
-- **Custom transform center** support for non-standard layouts
+- **Transform centers from SVG elements** using special IDs like `transform-center`, `transform-center-hour`, etc.
 - **Dataclass-based** `AnalogueClock` with clean API
 
 ## Dependencies
