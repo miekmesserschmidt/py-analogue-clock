@@ -16,9 +16,107 @@ class AnalogueClock:
 
     def __post_init__(self):
         """Initialize derived attributes after dataclass initialization."""
+        # Validate that required hand elements are present
+        self._validate_svg()
+
+        # Parse SVG to extract transform centers
+        self._extract_transform_centers()
+
         # If transform_center not provided, calculate from SVG size
         if self.transform_center is None:
             self.transform_center = self._get_svg_center()
+
+    def _validate_svg(self):
+        """
+        Validate that the SVG contains required hand elements.
+
+        Required: hour-hand, minute-hand
+        Optional: second-hand
+
+        Raises:
+            ValueError: If any required hand element is missing
+        """
+        required_ids = ["hour-hand", "minute-hand"]
+        optional_ids = ["second-hand"]
+
+        try:
+            root = ET.fromstring(self.svg)
+        except ET.ParseError as e:
+            raise ValueError(f"Invalid SVG: {e}")
+
+        # Find all elements with IDs
+        found_ids = set()
+        for elem in root.iter():
+            elem_id = elem.get("id")
+            if elem_id in required_ids or elem_id in optional_ids:
+                found_ids.add(elem_id)
+
+        # Check which required IDs are missing
+        missing_ids = set(required_ids) - found_ids
+
+        if missing_ids:
+            missing_list = ", ".join(sorted(missing_ids))
+            raise ValueError(
+                f"SVG is missing required elements with IDs: {missing_list}. "
+                f"Required IDs are: hour-hand, minute-hand (second-hand is optional)"
+            )
+
+    def _extract_transform_centers(self):
+        """
+        Extract transform center coordinates from SVG elements.
+
+        Looks for elements with IDs:
+        - transform-center: General transform center for all hands
+        - transform-center-hour: Specific center for hour hand
+        - transform-center-minute: Specific center for minute hand
+        - transform-center-second: Specific center for second hand
+
+        Hand-specific centers override the general transform-center.
+        Centers are extracted from cx/cy attributes or x/y attributes.
+        """
+        try:
+            root = ET.fromstring(self.svg)
+        except ET.ParseError:
+            # If SVG is invalid, this will be caught in _validate_svg
+            return
+
+        # Initialize transform center dictionaries
+        self._transform_centers = {}
+        general_center = None
+
+        # Find transform center elements
+        for elem in root.iter():
+            elem_id = elem.get("id")
+            if not elem_id:
+                continue
+
+            # Extract coordinates from element
+            center = None
+            cx = elem.get("cx")
+            cy = elem.get("cy")
+            x = elem.get("x")
+            y = elem.get("y")
+
+            if cx and cy:
+                center = (float(cx), float(cy))
+            elif x and y:
+                center = (float(x), float(y))
+
+            # Store centers based on ID
+            if elem_id == "transform-center" and center:
+                general_center = center
+            elif elem_id == "transform-center-hour" and center:
+                self._transform_centers["hour"] = center
+            elif elem_id == "transform-center-minute" and center:
+                self._transform_centers["minute"] = center
+            elif elem_id == "transform-center-second" and center:
+                self._transform_centers["second"] = center
+
+        # Apply general center as fallback for hands without specific centers
+        if general_center:
+            for hand in ["hour", "minute", "second"]:
+                if hand not in self._transform_centers:
+                    self._transform_centers[hand] = general_center
 
     def _get_svg_center(self) -> Tuple[float, float]:
         """
@@ -97,17 +195,17 @@ class AnalogueClock:
         # Find and update hour hand
         hour_hand = self._find_element_by_id(root, "hour-hand")
         if hour_hand is not None:
-            self._set_transform(hour_hand, hour_angle)
+            self._set_transform(hour_hand, hour_angle, "hour")
 
         # Find and update minute hand
         minute_hand = self._find_element_by_id(root, "minute-hand")
         if minute_hand is not None:
-            self._set_transform(minute_hand, minute_angle)
+            self._set_transform(minute_hand, minute_angle, "minute")
 
         # Find and update second hand
         second_hand = self._find_element_by_id(root, "second-hand")
         if second_hand is not None:
-            self._set_transform(second_hand, second_angle)
+            self._set_transform(second_hand, second_angle, "second")
 
         # Convert back to string
         return ET.tostring(root, encoding="unicode")
@@ -130,21 +228,26 @@ class AnalogueClock:
                 return elem
         return None
 
-    def _set_transform(self, element: ET.Element, angle: float):
+    def _set_transform(self, element: ET.Element, angle: float, hand_type: str):
         """
         Set the CSS transform on an element.
 
         Args:
             element: Element to modify
             angle: Rotation angle in degrees
+            hand_type: Type of hand ('hour', 'minute', or 'second')
         """
-        # Get the center point from the element's style or use instance's transform_center
+        # Get the center point - use hand-specific center if available, otherwise fall back to instance's transform_center
         style = element.get("style", "")
 
-        assert self.transform_center is not None, (
-            "transform_center should be set in __post_init__"
-        )
-        center_x, center_y = self.transform_center
+        # Determine which transform center to use
+        if hasattr(self, "_transform_centers") and hand_type in self._transform_centers:
+            center_x, center_y = self._transform_centers[hand_type]
+        else:
+            assert self.transform_center is not None, (
+                "transform_center should be set in __post_init__"
+            )
+            center_x, center_y = self.transform_center
 
         # Add or update transform-origin if not present
         if "transform-origin" not in style:
