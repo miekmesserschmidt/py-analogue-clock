@@ -7,6 +7,7 @@ A Python library and cli for generating SVG analogue clock faces displaying spec
 - 🕐 Generate analogue clock SVGs for any time
 - Use the default clock face or provide your own custom SVG
 - Can be used as library, or cli
+- Arbitrary clock faces can be used. Provide an svg that has elements with ids "minute-hand", "hour-hand" (optional "second-hand"). By default the center of the svg is taken as the pivot around which the hands rotate, but this may be cusomized by providing (invisible) elements (circle or box) with the ids "transform-center", "transform-center-second", "transform-center-minute", "transform-center-hour".
 
 ## Installation
 
