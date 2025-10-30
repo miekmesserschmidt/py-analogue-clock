@@ -5,7 +5,7 @@
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
     "svg.preview.mode": "img",
-    "workbench.editorAssociations": {
-        "*.svg": "default"
-    }
+    // "workbench.editorAssociations": {
+    //     "*.svg": "default"
+    // }
 }

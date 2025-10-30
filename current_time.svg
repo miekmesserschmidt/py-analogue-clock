@@ -66,13 +66,13 @@
   <ns0:line x1="125.54958515983154" y1="34.96984215370446" x2="123.22097422267264" y2="24.01458902548582" stroke="rgb(0, 0, 0)" stroke-opacity="1" stroke-width="0.5" stroke-linecap="round" stroke-dasharray="solid" id="line59" />
   <ns0:line x1="137.70745271972396" y1="33.044225104691066" x2="136.53673393112624" y2="21.905579876566378" stroke="rgb(0, 0, 0)" stroke-opacity="1" stroke-width="0.5" stroke-linecap="round" stroke-dasharray="solid" id="line60" />
   <ns0:circle cx="150" cy="150" r="2" stroke="rgb(0, 0, 0)" stroke-opacity="1" stroke-width="1" fill="rgb(128, 128, 128)" fill-opacity="1" id="circle73" />
-  <ns0:line x1="149.98555" y1="160.01157" x2="150" y2="87.011559" stroke="#000000" stroke-opacity="1" stroke-width="9.8" stroke-linecap="square" stroke-dasharray="none" id="hour-hand" ns2:transform-center-x="-0.010048642" ns2:transform-center-y="-26.4823" style="transform-origin: 150.0px 150.0px; transform: rotate(12.0deg)" />
-  <ns0:line x1="150.00034" y1="159.99126" x2="150" y2="44.991253" stroke="#000000" stroke-opacity="1" stroke-width="6.3" stroke-linecap="square" stroke-dasharray="none" id="minute-hand" ns2:transform-center-x="-0.0080728193" ns2:transform-center-y="-47.504087" style="transform-origin: 150.0px 150.0px; transform: rotate(148.6deg)" />
-  <ns0:line x1="149.99689" y1="167.97285" x2="150" y2="44.972858" stroke="#ff0000" stroke-opacity="1" stroke-width="1.75" stroke-linecap="square" stroke-dasharray="none" id="second-hand" ns2:transform-center-x="0.00022653818" ns2:transform-center-y="-43.513573" style="transform-origin: 150.0px 180.0px; transform: rotate(276deg)" />
+  <ns0:line x1="149.98555" y1="160.01157" x2="150" y2="87.011559" stroke="#000000" stroke-opacity="1" stroke-width="9.8" stroke-linecap="square" stroke-dasharray="none" id="hour-hand" ns2:transform-center-x="-0.010048642" ns2:transform-center-y="-26.4823" style="transform-origin: 150.0px 150.0px; transform: rotate(35.0deg)" />
+  <ns0:line x1="150.00034" y1="159.99126" x2="150" y2="44.991253" stroke="#000000" stroke-opacity="1" stroke-width="6.3" stroke-linecap="square" stroke-dasharray="none" id="minute-hand" ns2:transform-center-x="-0.0080728193" ns2:transform-center-y="-47.504087" style="transform-origin: 150.0px 150.0px; transform: rotate(60.8deg)" />
+  <ns0:line x1="149.99689" y1="167.97285" x2="150" y2="44.972858" stroke="#ff0000" stroke-opacity="1" stroke-width="1.75" stroke-linecap="square" stroke-dasharray="none" id="second-hand" ns2:transform-center-x="0.00022653818" ns2:transform-center-y="-43.513573" style="transform-origin: 150.0px 150.0px; transform: rotate(48deg)" />
 
 
     <ns0:circle id="transform-center" cx="150" cy="150" r="0.1" fill="orange" />
-    <ns0:circle id="transform-center-second" cx="150" cy="180" r="0.1" fill="orange" />
+    <ns0:circle id="transform-center-second" cx="150" cy="150" r="0.1" fill="orange" />
     <ns0:circle id="transform-center-minute" cx="150" cy="150" r="0.1" fill="orange" />
     <ns0:circle id="transform-center-hour" cx="150" cy="150" r="0.1" fill="orange" />
 </ns0:svg>

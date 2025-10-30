@@ -36,13 +36,6 @@ def generate(
         dir_okay=False,
         writable=True,
     ),
-    center: Optional[str] = typer.Option(
-        None,
-        "--center",
-        "-c",
-        help="Custom transform center as 'x,y' (e.g., '150,150'). If not provided, center is taken as the center of the svg",
-        metavar="X,Y",
-    ),
 ):
     """
     Generate an SVG clock face displaying the specified time.
@@ -66,24 +59,9 @@ def generate(
         with open(svg_file, "r") as f:
             svg_content = f.read()
 
-        # Parse custom center if provided
-        transform_center = None
-        if center is not None:
-            try:
-                parts = center.split(",")
-                if len(parts) != 2:
-                    raise ValueError("Center must be in format 'x,y'")
-                x, y = float(parts[0].strip()), float(parts[1].strip())
-                transform_center = (x, y)
-                typer.echo(f"Using custom transform center: ({x}, {y})", err=True)
-            except ValueError as e:
-                typer.echo(f"Error: Invalid center format - {e}", err=True)
-                typer.echo("Center must be in format 'x,y' (e.g., '150,150')", err=True)
-                raise typer.Exit(code=1)
-
         # Create clock instance (validates SVG)
         try:
-            clock = AnalogueClock(svg=svg_content, transform_center=transform_center)
+            clock = AnalogueClock(svg=svg_content)
         except ValueError as e:
             typer.echo(f"Error: Invalid SVG - {e}", err=True)
             raise typer.Exit(code=1)

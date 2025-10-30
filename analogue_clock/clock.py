@@ -1,7 +1,6 @@
 """Core clock functionality for generating analogue clock SVGs."""
 
 import re
-from tkinter import E
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from datetime import time
