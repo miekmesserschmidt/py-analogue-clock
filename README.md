@@ -44,17 +44,17 @@ uv run analogueclock test_clock.svg --time 12:00:00 --output clock_noon.svg
 
 ```python
 from datetime import time
-from analogue_clock import uv run AnalogueClock
+from analogue_clock import AnalogueClock
 
 # Create a clock instance
-clock = uv run AnalogueClock()
+clock = AnalogueClock()
 
 # Generate SVG for a specific time
 svg = clock.generate(time(3, 15, 30))
 
 # Save to file
 with open("clock.svg", "w") as f:
-    f.write(svg)
+  f.write(svg)
 ```
 
 ## Usage
@@ -63,9 +63,9 @@ with open("clock.svg", "w") as f:
 
 ```python
 from datetime import time
-from analogue_clock import uv run AnalogueClock
+from analogue_clock import AnalogueClock
 
-clock = uv run AnalogueClock()
+clock = AnalogueClock()
 
 # Generate clock for 3:15:30 PM
 svg = clock.generate(time(15, 15, 30))
@@ -74,9 +74,9 @@ svg = clock.generate(time(15, 15, 30))
 ### Using time strings
 
 ```python
-from analogue_clock import uv run AnalogueClock
+from analogue_clock import AnalogueClock
 
-clock = uv run AnalogueClock()
+clock = AnalogueClock()
 
 # HH:MM:SS format
 svg = clock.generate("14:30:45")
@@ -90,7 +90,7 @@ svg = clock.generate("09:15")
 You can provide your own SVG template as long as it contains elements with the IDs `hour-hand`, `minute-hand`, and `second-hand`:
 
 ```python
-from analogue_clock import uv run AnalogueClock
+from analogue_clock import AnalogueClock
 
 custom_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
   <circle cx="100" cy="100" r="90" fill="white" stroke="black"/>
@@ -99,7 +99,7 @@ custom_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
   <line id="second-hand" x1="100" y1="100" x2="100" y2="20" stroke="red" stroke-width="1"/>
 </svg>"""
 
-clock = uv run AnalogueClock(svg=custom_svg)
+clock = AnalogueClock(svg=custom_svg)
 svg = clock.generate("12:30:00")
 ```
 
@@ -112,7 +112,7 @@ invalid_svg = """<svg viewBox="0 0 200 200">
   <!-- Missing minute-hand! -->
 </svg>"""
 
-clock = uv run AnalogueClock(svg=invalid_svg)  # Raises ValueError
+clock = AnalogueClock(svg=invalid_svg)  # Raises ValueError
 ```
 
 The library automatically detects the SVG center from the `viewBox` attribute (preferred) or `width`/`height` attributes. For a `viewBox="0 0 200 200"`, the center is automatically calculated as (100, 100).
@@ -122,7 +122,7 @@ The library automatically detects the SVG center from the `viewBox` attribute (p
 If your clock hands don't rotate around the geometric center of the SVG, you can specify a custom transform center:
 
 ```python
-from analogue_clock import uv run AnalogueClock
+from analogue_clock import AnalogueClock
 
 custom_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
   <circle id="transform-center" cx="100" cy="100" r="90" fill="white" stroke="black"/>
@@ -132,7 +132,7 @@ custom_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
 </svg>"""
 
 # Hands rotate around (100, 100) instead of SVG center (150, 150)
-clock = uv run AnalogueClock(svg=custom_svg, transform_center=(100.0, 100.0))
+clock = AnalogueClock(svg=custom_svg, transform_center=(100.0, 100.0))
 svg = clock.generate("12:30:00")
 ```
 
@@ -154,7 +154,7 @@ Hand-specific centers always override the general `transform-center`.
 #### Example: General Transform Center
 
 ```python
-from analogue_clock import uv run AnalogueClock
+from analogue_clock import AnalogueClock
 
 svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
   <!-- Define transform center with a circle -->
@@ -166,14 +166,14 @@ svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
   <line id="second-hand" x1="150" y1="150" x2="150" y2="40"/>
 </svg>"""
 
-clock = uv run AnalogueClock(svg=svg)
+clock = AnalogueClock(svg=svg)
 # No need to specify transform_center - it's read from the SVG!
 ```
 
 #### Example: Hand-Specific Centers
 
 ```python
-from analogue_clock import uv run AnalogueClock
+from analogue_clock import AnalogueClock
 
 svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
   <!-- General center for hour and minute hands -->
@@ -188,7 +188,7 @@ svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
   <line id="second-hand" x1="150" y1="180" x2="150" y2="40"/>
 </svg>"""
 
-clock = uv run AnalogueClock(svg=svg)
+clock = AnalogueClock(svg=svg)
 svg_result = clock.generate("15:30:45")
 # Hour and minute hands rotate around (150, 150)
 # Second hand rotates around (150, 180)
@@ -197,7 +197,7 @@ svg_result = clock.generate("15:30:45")
 #### Example: Individual Centers for Each Hand
 
 ```python
-from analogue_clock import uv run AnalogueClock
+from analogue_clock import AnalogueClock
 
 svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
   <!-- Each hand has its own pivot point -->
@@ -210,7 +210,7 @@ svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
   <line id="second-hand" x1="140" y1="140" x2="140" y2="80"/>
 </svg>"""
 
-clock = uv run AnalogueClock(svg=svg)
+clock = AnalogueClock(svg=svg)
 # Each hand rotates around its own unique center!
 ```
 
@@ -299,7 +299,7 @@ The library works by:
    - Hour hand: 30° per hour + 0.5° per minute
    - Minute hand: 6° per minute + 0.1° per second
    - Second hand: 6° per second
-4. **Applying** CSS transforms to rotate each hand around the clock center (or custom transform center)
+4. **Applying** SVG transform attributes (e.g., `transform="rotate(angle cx cy)"`) to rotate each hand around the clock center (or custom transform center)
 5. **Returning** the modified SVG as a string
 
 ### Running Tests

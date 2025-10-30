@@ -80,10 +80,16 @@ class TestAnalogueClock:
         root = ET.fromstring(svg)
         assert root is not None
 
-        # Check that hands have transforms applied
-        assert "rotate(97.5deg)" in svg  # hour hand
-        assert "rotate(93" in svg  # minute hand (allowing for floating point)
-        assert "rotate(180deg)" in svg  # second hand
+        # Check that hands have SVG transform attributes applied
+        hour = next(e for e in root.iter() if e.get("id") == "hour-hand")
+        minute = next(e for e in root.iter() if e.get("id") == "minute-hand")
+        second = next(e for e in root.iter() if e.get("id") == "second-hand")
+
+        assert hour.get("transform", "").startswith("rotate(97.5 ")
+        assert "rotate(93" in minute.get(
+            "transform", ""
+        )  # minute includes fractional seconds
+        assert second.get("transform", "") == "rotate(180 150.0 150.0)"
 
     def test_generate_with_string_hhmmss(self):
         """Test SVG generation with HH:MM:SS string."""
@@ -95,7 +101,8 @@ class TestAnalogueClock:
         assert root is not None
 
         # Check that hands have transforms applied
-        assert "rotate(97.5deg)" in svg
+        hour = next(e for e in root.iter() if e.get("id") == "hour-hand")
+        assert hour.get("transform", "").startswith("rotate(97.5 ")
 
     def test_generate_with_string_hhmm(self):
         """Test SVG generation with HH:MM string (no seconds)."""
@@ -107,7 +114,8 @@ class TestAnalogueClock:
         assert root is not None
 
         # Check hour hand angle (should be 3*30 + 15*0.5 = 97.5)
-        assert "rotate(97.5deg)" in svg
+        hour = next(e for e in root.iter() if e.get("id") == "hour-hand")
+        assert hour.get("transform", "").startswith("rotate(97.5 ")
 
     def test_find_element_by_id(self):
         """Test finding elements by ID in SVG."""
@@ -140,20 +148,22 @@ class TestAnalogueClock:
         element = ET.Element("line")
 
         clock._set_transform(element, 45.5, "hour")
-
+        # Should set SVG transform attribute and not rely on style transforms
+        assert element.get("transform") == "rotate(45.5 150.0 150.0)"
         style = element.get("style")
-        assert style is not None
-        assert "transform: rotate(45.5deg)" in style
-        assert "transform-origin" in style
+        assert style is None or (
+            "transform" not in style and "transform-origin" not in style
+        )
 
     def test_apply_transforms(self):
         """Test applying transforms to all hands."""
         clock = AnalogueClock()
         svg = clock._apply_transforms(clock.svg, 90, 180, 270)
-
-        assert "rotate(90deg)" in svg
-        assert "rotate(180deg)" in svg
-        assert "rotate(270deg)" in svg
+        root = ET.fromstring(svg)
+        ids = {e.get("id"): e for e in root.iter() if e.get("id")}
+        assert ids["hour-hand"].get("transform") == "rotate(90 150.0 150.0)"
+        assert ids["minute-hand"].get("transform") == "rotate(180 150.0 150.0)"
+        assert ids["second-hand"].get("transform") == "rotate(270 150.0 150.0)"
 
     def test_output_is_valid_svg(self):
         """Test that generated output is valid SVG."""
@@ -270,7 +280,11 @@ class TestAnalogueClock:
 
         # Generate and check the transform uses the custom center
         svg = clock.generate(time(3, 0, 0))
-        assert "transform-origin: 100.0px 100.0px" in svg
+        root = ET.fromstring(svg)
+        # All hands should rotate around provided center (100,100)
+        for elem in root.iter():
+            if elem.get("id") in {"hour-hand", "minute-hand", "second-hand"}:
+                assert elem.get("transform", "").endswith(" 100.0 100.0)")
 
     def test_transform_center_in_generated_svg(self):
         """Test that generated SVG uses the correct transform center."""
@@ -282,9 +296,11 @@ class TestAnalogueClock:
         clock = AnalogueClock(svg=custom_svg)
 
         svg = clock.generate(time(12, 0, 0))
-
-        # Should use center (100, 100) derived from viewBox
-        assert "transform-origin: 100.0px 100.0px" in svg
+        root = ET.fromstring(svg)
+        # Should use center (100, 100) derived from viewBox in transform attribute
+        for elem in root.iter():
+            if elem.get("id") in {"hour-hand", "minute-hand", "second-hand"}:
+                assert elem.get("transform", "").endswith(" 100.0 100.0)")
 
     def test_default_svg_has_correct_center(self):
         """Test that default SVG calculates correct center."""
@@ -506,26 +522,21 @@ class TestTransformCenters:
         clock = AnalogueClock(svg=svg)
         result = clock.generate(time(3, 15, 30))
 
-        # Parse result to check transform-origin values
+        # Parse result to check transform centers encoded in transform attribute
         root = ET.fromstring(result)
+        ids = {e.get("id"): e for e in root.iter() if e.get("id")}
 
-        # Find hands and check their transform-origin
-        for elem in root.iter():
-            elem_id = elem.get("id")
-            if elem_id == "second-hand":
-                style = elem.get("style", "")
-                # Check for both integer and float format (150px or 150.0px)
-                assert (
-                    "transform-origin: 150px 180px" in style
-                    or "transform-origin: 150.0px 180.0px" in style
-                )
-            elif elem_id in ["hour-hand", "minute-hand"]:
-                style = elem.get("style", "")
-                # Check for both integer and float format (150px or 150.0px)
-                assert (
-                    "transform-origin: 150px 150px" in style
-                    or "transform-origin: 150.0px 150.0px" in style
-                )
+        # Hour and minute around 150,150
+        assert ids["hour-hand"].get("transform", "").split()[1:3] == [
+            "150.0",
+            "150.0)",
+        ] or ids["hour-hand"].get("transform", "").endswith(" 150.0 150.0)")
+        assert ids["minute-hand"].get("transform", "").split()[1:3] == [
+            "150.0",
+            "150.0)",
+        ] or ids["minute-hand"].get("transform", "").endswith(" 150.0 150.0)")
+        # Second hand around 150,180
+        assert ids["second-hand"].get("transform", "").endswith(" 150.0 180.0)")
 
     def test_dataclass_fields_populated_from_svg(self):
         """Test that dataclass fields are populated from SVG elements."""

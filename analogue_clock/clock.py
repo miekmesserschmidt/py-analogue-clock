@@ -196,7 +196,7 @@ class AnalogueClock:
         second_angle: float,
     ) -> str:
         """
-        Apply CSS transforms to clock hands in the SVG.
+        Apply SVG transforms to clock hands in the SVG.
 
         Args:
             svg_content: Original SVG content
@@ -225,6 +225,12 @@ class AnalogueClock:
         if second_hand is not None:
             self._set_transform(second_hand, second_angle, "second")
 
+        # Prefer default SVG namespace (no prefixes) for better tool compatibility
+        try:
+            ET.register_namespace("", "http://www.w3.org/2000/svg")
+        except Exception:
+            pass
+
         # Convert back to string
         return ET.tostring(root, encoding="unicode")
 
@@ -248,7 +254,7 @@ class AnalogueClock:
 
     def _set_transform(self, element: ET.Element, angle: float, hand_type: str):
         """
-        Set the CSS transform on an element.
+        Set the SVG transform attribute on an element.
 
         Args:
             element: Element to modify
@@ -256,28 +262,11 @@ class AnalogueClock:
             hand_type: Type of hand ('hour', 'minute', or 'second')
         """
 
-        # Get the center point - use hand-specific center if available, otherwise fall back to instance's transform_center
-        style = element.get("style", "")
-
-        # Determine which transform center to use
+        # Determine which transform center to use (hand-specific overrides, else general)
         center_x, center_y = self.transform_center_by_hand_type[hand_type]
 
-        # Add or update transform-origin if not present
-        if "transform-origin" not in style:
-            if style and not style.endswith(";"):
-                style += ";"
-            style += f"transform-origin: {center_x}px {center_y}px;"
-
-        # Add or update transform
-        # Remove existing transform if present
-        style_parts = [
-            s.strip()
-            for s in style.split(";")
-            if s.strip() and not s.strip().startswith("transform:")
-        ]
-        style_parts.append(f"transform: rotate({angle}deg)")
-
-        element.set("style", "; ".join(style_parts))
+        # Set the SVG transform attribute using rotate(angle cx cy)
+        element.set("transform", f"rotate({angle} {center_x} {center_y})")
 
     def generate(self, clock_time: Union[time, str]) -> str:
         """
@@ -343,10 +332,10 @@ DEFAULT_CLOCK_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 
   <text class="number" x="40" y="150">9</text>
   <text class="number" x="80" y="70">11</text>
   
-  <!-- Clock hands (starting at 12 o'clock position) -->
-  <line id="hour-hand" class="hand hour-hand" x1="150" y1="150" x2="150" y2="80" style="transform-origin: 150px 150px; transform: rotate(0deg)"/>
-  <line id="minute-hand" class="hand minute-hand" x1="150" y1="150" x2="150" y2="50" style="transform-origin: 150px 150px; transform: rotate(0deg)"/>
-  <line id="second-hand" class="hand second-hand" x1="150" y1="150" x2="150" y2="40" style="transform-origin: 150px 150px; transform: rotate(0deg)"/>
+    <!-- Clock hands (starting at 12 o'clock position) -->
+    <line id="hour-hand" class="hand hour-hand" x1="150" y1="150" x2="150" y2="80"/>
+    <line id="minute-hand" class="hand minute-hand" x1="150" y1="150" x2="150" y2="50"/>
+    <line id="second-hand" class="hand second-hand" x1="150" y1="150" x2="150" y2="40"/>
   
   <!-- Center dot -->
   <circle class="center-dot" cx="150" cy="150" r="5"/>
