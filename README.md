@@ -11,15 +11,8 @@ A Python library and cli for generating SVG analogue clock faces displaying spec
 ## Installation
 
 ```bash
-pip install py-analogue-clock
-```
+uv add git+https://github.com/miekmesserschmidt/py-analogue-clock
 
-For development:
-
-```bash
-git clone <repository-url>
-cd py-analogue-clock
-pip install -e ".[dev]"
 ```
 
 ## Quick Start
@@ -30,16 +23,16 @@ Generate a clock SVG from the command line:
 
 ```bash
 # Get help
-analogueclock --help
+uv run analogueclock --help
 
 # Show current time (output to stdout)
-analogueclock test_clock.svg
+uv run analogueclock test_clock.svg
 
 # Show specific time
-analogueclock test_clock.svg --time 15:30:45
+uv run analogueclock test_clock.svg --time 15:30:45
 
 # Save to file
-analogueclock test_clock.svg --time 12:00:00 --output clock_noon.svg
+uv run analogueclock test_clock.svg --time 12:00:00 --output clock_noon.svg
 
 ```
 
@@ -47,10 +40,10 @@ analogueclock test_clock.svg --time 12:00:00 --output clock_noon.svg
 
 ```python
 from datetime import time
-from analogue_clock import AnalogueClock
+from analogue_clock import uv run AnalogueClock
 
 # Create a clock instance
-clock = AnalogueClock()
+clock = uv run AnalogueClock()
 
 # Generate SVG for a specific time
 svg = clock.generate(time(3, 15, 30))
@@ -66,9 +59,9 @@ with open("clock.svg", "w") as f:
 
 ```python
 from datetime import time
-from analogue_clock import AnalogueClock
+from analogue_clock import uv run AnalogueClock
 
-clock = AnalogueClock()
+clock = uv run AnalogueClock()
 
 # Generate clock for 3:15:30 PM
 svg = clock.generate(time(15, 15, 30))
@@ -77,9 +70,9 @@ svg = clock.generate(time(15, 15, 30))
 ### Using time strings
 
 ```python
-from analogue_clock import AnalogueClock
+from analogue_clock import uv run AnalogueClock
 
-clock = AnalogueClock()
+clock = uv run AnalogueClock()
 
 # HH:MM:SS format
 svg = clock.generate("14:30:45")
@@ -93,7 +86,7 @@ svg = clock.generate("09:15")
 You can provide your own SVG template as long as it contains elements with the IDs `hour-hand`, `minute-hand`, and `second-hand`:
 
 ```python
-from analogue_clock import AnalogueClock
+from analogue_clock import uv run AnalogueClock
 
 custom_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
   <circle cx="100" cy="100" r="90" fill="white" stroke="black"/>
@@ -102,7 +95,7 @@ custom_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
   <line id="second-hand" x1="100" y1="100" x2="100" y2="20" stroke="red" stroke-width="1"/>
 </svg>"""
 
-clock = AnalogueClock(svg=custom_svg)
+clock = uv run AnalogueClock(svg=custom_svg)
 svg = clock.generate("12:30:00")
 ```
 
@@ -115,7 +108,7 @@ invalid_svg = """<svg viewBox="0 0 200 200">
   <!-- Missing minute-hand! -->
 </svg>"""
 
-clock = AnalogueClock(svg=invalid_svg)  # Raises ValueError
+clock = uv run AnalogueClock(svg=invalid_svg)  # Raises ValueError
 ```
 
 The library automatically detects the SVG center from the `viewBox` attribute (preferred) or `width`/`height` attributes. For a `viewBox="0 0 200 200"`, the center is automatically calculated as (100, 100).
@@ -125,7 +118,7 @@ The library automatically detects the SVG center from the `viewBox` attribute (p
 If your clock hands don't rotate around the geometric center of the SVG, you can specify a custom transform center:
 
 ```python
-from analogue_clock import AnalogueClock
+from analogue_clock import uv run AnalogueClock
 
 custom_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
   <circle id="transform-center" cx="100" cy="100" r="90" fill="white" stroke="black"/>
@@ -135,7 +128,7 @@ custom_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
 </svg>"""
 
 # Hands rotate around (100, 100) instead of SVG center (150, 150)
-clock = AnalogueClock(svg=custom_svg, transform_center=(100.0, 100.0))
+clock = uv run AnalogueClock(svg=custom_svg, transform_center=(100.0, 100.0))
 svg = clock.generate("12:30:00")
 ```
 
@@ -157,7 +150,7 @@ Hand-specific centers always override the general `transform-center`.
 #### Example: General Transform Center
 
 ```python
-from analogue_clock import AnalogueClock
+from analogue_clock import uv run AnalogueClock
 
 svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
   <!-- Define transform center with a circle -->
@@ -169,14 +162,14 @@ svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
   <line id="second-hand" x1="150" y1="150" x2="150" y2="40"/>
 </svg>"""
 
-clock = AnalogueClock(svg=svg)
+clock = uv run AnalogueClock(svg=svg)
 # No need to specify transform_center - it's read from the SVG!
 ```
 
 #### Example: Hand-Specific Centers
 
 ```python
-from analogue_clock import AnalogueClock
+from analogue_clock import uv run AnalogueClock
 
 svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
   <!-- General center for hour and minute hands -->
@@ -191,7 +184,7 @@ svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
   <line id="second-hand" x1="150" y1="180" x2="150" y2="40"/>
 </svg>"""
 
-clock = AnalogueClock(svg=svg)
+clock = uv run AnalogueClock(svg=svg)
 svg_result = clock.generate("15:30:45")
 # Hour and minute hands rotate around (150, 150)
 # Second hand rotates around (150, 180)
@@ -200,7 +193,7 @@ svg_result = clock.generate("15:30:45")
 #### Example: Individual Centers for Each Hand
 
 ```python
-from analogue_clock import AnalogueClock
+from analogue_clock import uv run AnalogueClock
 
 svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
   <!-- Each hand has its own pivot point -->
@@ -213,7 +206,7 @@ svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
   <line id="second-hand" x1="140" y1="140" x2="140" y2="80"/>
 </svg>"""
 
-clock = AnalogueClock(svg=svg)
+clock = uv run AnalogueClock(svg=svg)
 # Each hand rotates around its own unique center!
 ```
 
@@ -238,13 +231,13 @@ The package includes a CLI tool for generating clock SVGs from the command line.
 
 ```bash
 # Display current time (output to stdout)
-analogueclock my_clock.svg
+uv run analogueclock my_clock.svg
 
 # Display specific time
-analogueclock my_clock.svg --time 15:30:45
+uv run analogueclock my_clock.svg --time 15:30:45
 
 # Save to file
-analogueclock my_clock.svg --time 12:00:00 --output clock_noon.svg
+uv run analogueclock my_clock.svg --time 12:00:00 --output clock_noon.svg
 ```
 
 ### CLI Options
@@ -257,15 +250,15 @@ analogueclock my_clock.svg --time 12:00:00 --output clock_noon.svg
 
 ```bash
 # Generate clock showing current time, save to file
-analogueclock test_clock.svg -o current_time.svg
+uv run analogueclock test_clock.svg -o current_time.svg
 
 # Generate multiple times
-analogueclock test_clock.svg -t 09:15:00 -o morning.svg
-analogueclock test_clock.svg -t 14:30:00 -o afternoon.svg
-analogueclock test_clock.svg -t 21:45:00 -o evening.svg
+uv run analogueclock test_clock.svg -t 09:15:00 -o morning.svg
+uv run analogueclock test_clock.svg -t 14:30:00 -o afternoon.svg
+uv run analogueclock test_clock.svg -t 21:45:00 -o evening.svg
 
 # Pipe to other tools
-analogueclock test_clock.svg -t 12:00:00 | some-svg-processor
+uv run analogueclock test_clock.svg -t 12:00:00 | some-svg-processor
 ````
 
 ### CLI Options
@@ -278,18 +271,18 @@ analogueclock test_clock.svg -t 12:00:00 | some-svg-processor
 
 ```bash
 # Generate clock showing current time, save to file
-analogueclock test_clock.svg -o current_time.svg
+uv run analogueclock test_clock.svg -o current_time.svg
 
 # Generate multiple times
-analogueclock test_clock.svg -t 09:15:00 -o morning.svg
-analogueclock test_clock.svg -t 14:30:00 -o afternoon.svg
-analogueclock test_clock.svg -t 21:45:00 -o evening.svg
+uv run analogueclock test_clock.svg -t 09:15:00 -o morning.svg
+uv run analogueclock test_clock.svg -t 14:30:00 -o afternoon.svg
+uv run analogueclock test_clock.svg -t 21:45:00 -o evening.svg
 
 # Pipe to other tools
-analogueclock test_clock.svg -t 12:00:00 | some-svg-processor
+uv run analogueclock test_clock.svg -t 12:00:00 | some-svg-processor
 
 # View help
-analogueclock --help
+uv run analogueclock --help
 ```
 
 ## How It Works
