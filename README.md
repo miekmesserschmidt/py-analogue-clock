@@ -46,9 +46,6 @@ python main.py test_clock.svg --time 15:30:45
 # Save to file
 python main.py test_clock.svg --time 12:00:00 --output clock_noon.svg
 
-# Custom transform center (for non-standard layouts)
-python main.py test_clock.svg --time 15:30:45 --center 100,100 --output clock.svg
-
 # Get help
 python main.py --help
 ```
@@ -122,7 +119,7 @@ svg = clock.generate("12:30:00")
 # This will raise ValueError: SVG is missing required elements
 invalid_svg = """<svg viewBox="0 0 200 200">
   <line id="hour-hand" x1="100" y1="100" x2="100" y2="50"/>
-  <!-- Missing minute-hand and second-hand! -->
+  <!-- Missing minute-hand! -->
 </svg>"""
 
 clock = AnalogueClock(svg=invalid_svg)  # Raises ValueError
@@ -138,7 +135,7 @@ If your clock hands don't rotate around the geometric center of the SVG, you can
 from analogue_clock import AnalogueClock
 
 custom_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
-  <circle cx="100" cy="100" r="90" fill="white" stroke="black"/>
+  <circle id="transform-center" cx="100" cy="100" r="90" fill="white" stroke="black"/>
   <line id="hour-hand" x1="100" y1="100" x2="100" y2="50"/>
   <line id="minute-hand" x1="100" y1="100" x2="100" y2="30"/>
   <line id="second-hand" x1="100" y1="100" x2="100" y2="20"/>
@@ -255,17 +252,13 @@ python main.py my_clock.svg --time 15:30:45
 
 # Save to file
 python main.py my_clock.svg --time 12:00:00 --output clock_noon.svg
-
-# Use custom transform center
-python main.py my_clock.svg --time 15:30:45 --center 100,100 --output clock.svg
-````
+```
 
 ### CLI Options
 
 - **`svg_file`** (required): Path to the input SVG file containing elements with IDs `hour-hand`, `minute-hand`, and `second-hand`
 - **`--time` / `-t`**: Time to display in `HH:MM:SS` format. If omitted, uses current system time
 - **`--output` / `-o`**: Output file path. If omitted, prints the SVG to stdout
-- **`--center` / `-c`**: Custom transform center as `X,Y` coordinates (e.g., `150,150`). If omitted, center is auto-detected from SVG's viewBox or width/height attributes
 
 ### Examples
 
@@ -278,8 +271,26 @@ python main.py test_clock.svg -t 09:15:00 -o morning.svg
 python main.py test_clock.svg -t 14:30:00 -o afternoon.svg
 python main.py test_clock.svg -t 21:45:00 -o evening.svg
 
-# Use custom transform center for non-standard clock layouts
-python main.py custom_clock.svg -t 15:30:00 -c 100,100 -o output.svg
+# Pipe to other tools
+python main.py test_clock.svg -t 12:00:00 | some-svg-processor
+````
+
+### CLI Options
+
+- **`svg_file`** (required): Path to the input SVG file containing elements with IDs `hour-hand`, `minute-hand`, and `second-hand`
+- **`--time` / `-t`**: Time to display in `HH:MM:SS` format. If omitted, uses current system time
+- **`--output` / `-o`**: Output file path. If omitted, prints the SVG to stdout
+
+### Examples
+
+```bash
+# Generate clock showing current time, save to file
+python main.py test_clock.svg -o current_time.svg
+
+# Generate multiple times
+python main.py test_clock.svg -t 09:15:00 -o morning.svg
+python main.py test_clock.svg -t 14:30:00 -o afternoon.svg
+python main.py test_clock.svg -t 21:45:00 -o evening.svg
 
 # Pipe to other tools
 python main.py test_clock.svg -t 12:00:00 | some-svg-processor

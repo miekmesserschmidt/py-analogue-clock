@@ -1,6 +1,6 @@
 [project]
 name = "py-analogue-clock"
-version = "0.1.0"
+version = "0.2.0"
 description = "Generate SVG analogue clock faces displaying specified times"
 readme = "README.md"
 requires-python = ">=3.14"
@@ -9,7 +9,7 @@ dependencies = [
     "typer>=0.20.0",
 ]
 authors = [
-    { name = "Your Name", email = "your.email@example.com" }
+    { name = "Miek Messerschmidt", email = "mmesserschmidt@gmail.com" }
 ]
 keywords = ["svg", "clock", "analogue", "time", "visualization"]
 classifiers = [
@@ -28,3 +28,6 @@ classifiers = [
 dev = [
     "pytest>=8.3.5",
 ]
+
+[project.scripts]
+analogueclock = "analogue_clock.main:app"

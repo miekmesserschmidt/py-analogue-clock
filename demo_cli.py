@@ -58,18 +58,11 @@ def main():
         "Generate clock showing 09:15:30",
     )
 
-    # Example 6: Custom transform center
-    run_command(
-        "python3 main.py test_clock.svg -t 18:45:00 -c 150,150 -o demo_clock_4.svg",
-        "Generate clock with custom transform center (150,150)",
-    )
-
     print("=" * 60)
     print("Demo complete! Check the generated files:")
     print("  - demo_clock_1.svg (15:30:45)")
     print("  - demo_clock_2.svg (12:00:00)")
     print("  - demo_clock_3.svg (09:15:30)")
-    print("  - demo_clock_4.svg (18:45:00 with custom center)")
     print("=" * 60)
 
 
