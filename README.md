@@ -305,7 +305,7 @@ The library works by:
 ### Running Tests
 
 ```bash
-pytest
+uv run pytest
 ```
 
 ## Requirements
