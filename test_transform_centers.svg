@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
+  <defs>
+    <style>
+      .clock-face { fill: white; stroke: black; stroke-width: 2; }
+      .hand { stroke-linecap: round; }
+      .hour-hand { stroke: blue; stroke-width: 6; }
+      .minute-hand { stroke: green; stroke-width: 4; }
+      .second-hand { stroke: red; stroke-width: 2; }
+      .center-marker { fill: orange; opacity: 0.5; }
+    </style>
+  </defs>
+  
+  <!-- Clock face -->
+  <circle class="clock-face" cx="150" cy="150" r="140"/>
+  
+  <!-- Transform center markers (invisible points) -->
+  <circle id="transform-center" class="center-marker" cx="150" cy="150" r="5"/>
+  <circle id="transform-center-second" class="center-marker" cx="150" cy="180" r="5"/>
+  
+  <!-- Clock hands (starting at 12 o'clock position) -->
+  <line id="hour-hand" class="hand hour-hand" x1="150" y1="150" x2="150" y2="80"/>
+  <line id="minute-hand" class="hand minute-hand" x1="150" y1="150" x2="150" y2="50"/>
+  <line id="second-hand" class="hand second-hand" x1="150" y1="180" x2="150" y2="40"/>
+</svg>

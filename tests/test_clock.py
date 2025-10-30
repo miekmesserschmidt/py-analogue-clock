@@ -139,7 +139,7 @@ class TestAnalogueClock:
         clock = AnalogueClock()
         element = ET.Element("line")
 
-        clock._set_transform(element, 45.5)
+        clock._set_transform(element, 45.5, "hour")
 
         style = element.get("style")
         assert style is not None
@@ -216,12 +216,9 @@ class TestAnalogueClock:
         custom_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
             <line id="hour-hand" x1="0" y1="0" x2="0" y2="100"/>
         </svg>"""
-        clock = AnalogueClock(svg=custom_svg)
-
-        # Should not raise an error
-        svg = clock.generate(time(3, 15, 30))
-        assert svg is not None
-        assert "rotate(97.5deg)" in svg
+        ## should throw
+        with pytest.raises(ValueError):
+            AnalogueClock(svg=custom_svg)
 
     def test_svg_center_from_viewbox(self):
         """Test that SVG center is correctly extracted from viewBox."""
@@ -251,6 +248,8 @@ class TestAnalogueClock:
         """Test that SVG center handles width/height with units (px)."""
         custom_svg = """<svg xmlns="http://www.w3.org/2000/svg" width="600px" height="600px">
             <line id="hour-hand" x1="300" y1="300" x2="300" y2="200"/>
+            <line id="minute-hand" x1="300" y1="300" x2="300" y2="180"/>
+            <line id="second-hand" x1="300" y1="300" x2="300" y2="160"/>
         </svg>"""
         clock = AnalogueClock(svg=custom_svg)
 
@@ -277,6 +276,8 @@ class TestAnalogueClock:
         """Test that generated SVG uses the correct transform center."""
         custom_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
             <line id="hour-hand" x1="100" y1="100" x2="100" y2="50"/>
+            <line id="minute-hand" x1="100" y1="100" x2="100" y2="40"/>
+            <line id="second-hand" x1="100" y1="100" x2="100" y2="30"/>
         </svg>"""
         clock = AnalogueClock(svg=custom_svg)
 
@@ -292,14 +293,238 @@ class TestAnalogueClock:
         # Default SVG has viewBox="0 0 300 300", so center is (150, 150)
         assert clock.transform_center == (150.0, 150.0)
 
-    def test_dataclass_immutability(self):
-        """Test that AnalogueClock works as a dataclass."""
-        svg1 = """<svg viewBox="0 0 300 300"><line id="hour-hand"/></svg>"""
-        svg2 = """<svg viewBox="0 0 400 400"><line id="hour-hand"/></svg>"""
 
-        clock1 = AnalogueClock(svg=svg1)
-        clock2 = AnalogueClock(svg=svg2)
+class TestSVGValidation:
+    """Test cases for SVG validation."""
 
-        # Each instance should have its own values
-        assert clock1.svg != clock2.svg
-        assert clock1.transform_center != clock2.transform_center
+    def test_valid_svg_with_all_hands(self):
+        """Test that valid SVG with all hands passes validation."""
+        valid_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+            <line id="hour-hand" x1="100" y1="100" x2="100" y2="50"/>
+            <line id="minute-hand" x1="100" y1="100" x2="100" y2="40"/>
+            <line id="second-hand" x1="100" y1="100" x2="100" y2="30"/>
+        </svg>"""
+
+        # Should not raise any error
+        clock = AnalogueClock(svg=valid_svg)
+        assert clock is not None
+
+    def test_missing_hour_hand(self):
+        """Test that SVG missing hour-hand raises ValueError."""
+        invalid_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+            <line id="minute-hand" x1="100" y1="100" x2="100" y2="40"/>
+            <line id="second-hand" x1="100" y1="100" x2="100" y2="30"/>
+        </svg>"""
+
+        with pytest.raises(ValueError) as excinfo:
+            AnalogueClock(svg=invalid_svg)
+
+        assert "hour-hand" in str(excinfo.value)
+        assert "missing required elements" in str(excinfo.value).lower()
+
+    def test_missing_minute_hand(self):
+        """Test that SVG missing minute-hand raises ValueError."""
+        invalid_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+            <line id="hour-hand" x1="100" y1="100" x2="100" y2="50"/>
+            <line id="second-hand" x1="100" y1="100" x2="100" y2="30"/>
+        </svg>"""
+
+        with pytest.raises(ValueError) as excinfo:
+            AnalogueClock(svg=invalid_svg)
+
+        assert "minute-hand" in str(excinfo.value)
+
+    def test_missing_second_hand(self):
+        """Test that SVG missing second-hand is allowed (second-hand is optional)."""
+        valid_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+            <line id="hour-hand" x1="100" y1="100" x2="100" y2="50"/>
+            <line id="minute-hand" x1="100" y1="100" x2="100" y2="40"/>
+        </svg>"""
+
+        # Should not raise any error - second-hand is optional
+        clock = AnalogueClock(svg=valid_svg)
+        assert clock is not None
+
+        # Should still generate SVG successfully
+        svg = clock.generate("12:00:00")
+        assert svg is not None
+
+    def test_missing_multiple_required_hands(self):
+        """Test that SVG missing multiple required hands lists all missing."""
+        invalid_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+            <line id="second-hand" x1="100" y1="100" x2="100" y2="30"/>
+        </svg>"""
+
+        with pytest.raises(ValueError) as excinfo:
+            AnalogueClock(svg=invalid_svg)
+
+        error_msg = str(excinfo.value)
+        assert "hour-hand" in error_msg
+        assert "minute-hand" in error_msg
+
+    def test_missing_all_required_hands(self):
+        """Test that SVG missing all required hands raises ValueError."""
+        invalid_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+            <circle cx="100" cy="100" r="90"/>
+            <line id="second-hand" x1="100" y1="100" x2="100" y2="30"/>
+        </svg>"""
+
+        with pytest.raises(ValueError) as excinfo:
+            AnalogueClock(svg=invalid_svg)
+
+        error_msg = str(excinfo.value)
+        assert "hour-hand" in error_msg
+        assert "minute-hand" in error_msg
+
+    def test_only_second_hand_fails(self):
+        """Test that SVG with only second-hand (no required hands) fails."""
+        invalid_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+            <line id="second-hand" x1="100" y1="100" x2="100" y2="30"/>
+        </svg>"""
+
+        with pytest.raises(ValueError) as excinfo:
+            AnalogueClock(svg=invalid_svg)
+
+        error_msg = str(excinfo.value)
+        assert "hour-hand" in error_msg
+        assert "minute-hand" in error_msg
+        assert "optional" in error_msg.lower()
+
+    def test_invalid_xml(self):
+        """Test that invalid XML raises ValueError."""
+        invalid_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+            <line id="hour-hand" x1="100" y1="100" x2="100" y2="50"
+        </svg>"""
+
+        with pytest.raises(ValueError) as excinfo:
+            AnalogueClock(svg=invalid_svg)
+
+        assert "Invalid SVG" in str(excinfo.value)
+
+    def test_default_svg_passes_validation(self):
+        """Test that default SVG passes validation."""
+        # Should not raise any error
+        clock = AnalogueClock()
+        assert clock is not None
+        assert "hour-hand" in clock.svg
+        assert "minute-hand" in clock.svg
+        assert "second-hand" in clock.svg
+
+
+class TestTransformCenters:
+    """Test cases for transform center functionality."""
+
+    def test_general_transform_center(self):
+        """Test that general transform-center is used for all hands."""
+        svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+            <circle id="transform-center" cx="100" cy="100" r="5"/>
+            <line id="hour-hand" x1="100" y1="100" x2="100" y2="50"/>
+            <line id="minute-hand" x1="100" y1="100" x2="100" y2="40"/>
+            <line id="second-hand" x1="100" y1="100" x2="100" y2="30"/>
+        </svg>"""
+
+        clock = AnalogueClock(svg=svg)
+
+        # All hands should use the general center
+        assert clock._transform_centers["hour"] == (100.0, 100.0)
+        assert clock._transform_centers["minute"] == (100.0, 100.0)
+        assert clock._transform_centers["second"] == (100.0, 100.0)
+
+    def test_hand_specific_transform_center(self):
+        """Test that hand-specific centers override general center."""
+        svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+            <circle id="transform-center" cx="150" cy="150" r="5"/>
+            <circle id="transform-center-second" cx="150" cy="180" r="5"/>
+            <line id="hour-hand" x1="150" y1="150" x2="150" y2="80"/>
+            <line id="minute-hand" x1="150" y1="150" x2="150" y2="50"/>
+            <line id="second-hand" x1="150" y1="180" x2="150" y2="40"/>
+        </svg>"""
+
+        clock = AnalogueClock(svg=svg)
+
+        # Hour and minute should use general center
+        assert clock._transform_centers["hour"] == (150.0, 150.0)
+        assert clock._transform_centers["minute"] == (150.0, 150.0)
+        # Second hand should use its specific center
+        assert clock._transform_centers["second"] == (150.0, 180.0)
+
+    def test_all_hand_specific_centers(self):
+        """Test that all hands can have individual centers."""
+        svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+            <circle id="transform-center-hour" cx="150" cy="150" r="5"/>
+            <circle id="transform-center-minute" cx="160" cy="160" r="5"/>
+            <circle id="transform-center-second" cx="140" cy="140" r="5"/>
+            <line id="hour-hand" x1="150" y1="150" x2="150" y2="80"/>
+            <line id="minute-hand" x1="160" y1="160" x2="160" y2="80"/>
+            <line id="second-hand" x1="140" y1="140" x2="140" y2="80"/>
+        </svg>"""
+
+        clock = AnalogueClock(svg=svg)
+
+        assert clock._transform_centers["hour"] == (150.0, 150.0)
+        assert clock._transform_centers["minute"] == (160.0, 160.0)
+        assert clock._transform_centers["second"] == (140.0, 140.0)
+
+    def test_transform_center_with_x_y_attributes(self):
+        """Test that transform centers work with x/y attributes (not just cx/cy)."""
+        svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+            <rect id="transform-center" x="150" y="150" width="10" height="10"/>
+            <line id="hour-hand" x1="150" y1="150" x2="150" y2="80"/>
+            <line id="minute-hand" x1="150" y1="150" x2="150" y2="50"/>
+        </svg>"""
+
+        clock = AnalogueClock(svg=svg)
+
+        assert clock._transform_centers["hour"] == (150.0, 150.0)
+        assert clock._transform_centers["minute"] == (150.0, 150.0)
+
+    def test_no_transform_center_uses_svg_center(self):
+        """Test that SVG center is used when no transform-center elements exist."""
+        svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+            <line id="hour-hand" x1="100" y1="100" x2="100" y2="50"/>
+            <line id="minute-hand" x1="100" y1="100" x2="100" y2="40"/>
+        </svg>"""
+
+        clock = AnalogueClock(svg=svg)
+
+        # Should fall back to SVG center (100, 100 from viewBox)
+        assert clock.transform_center == (100.0, 100.0)
+        # No hand-specific centers should be set
+        assert (
+            not hasattr(clock, "_transform_centers")
+            or len(clock._transform_centers) == 0
+        )
+
+    def test_transform_applied_with_hand_specific_center(self):
+        """Test that transforms are applied correctly with hand-specific centers."""
+        svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+            <circle id="transform-center" cx="150" cy="150" r="5"/>
+            <circle id="transform-center-second" cx="150" cy="180" r="5"/>
+            <line id="hour-hand" x1="150" y1="150" x2="150" y2="80"/>
+            <line id="minute-hand" x1="150" y1="150" x2="150" y2="50"/>
+            <line id="second-hand" x1="150" y1="180" x2="150" y2="40"/>
+        </svg>"""
+
+        clock = AnalogueClock(svg=svg)
+        result = clock.generate(time(3, 15, 30))
+
+        # Parse result to check transform-origin values
+        root = ET.fromstring(result)
+
+        # Find hands and check their transform-origin
+        for elem in root.iter():
+            elem_id = elem.get("id")
+            if elem_id == "second-hand":
+                style = elem.get("style", "")
+                # Check for both integer and float format (150px or 150.0px)
+                assert (
+                    "transform-origin: 150px 180px" in style
+                    or "transform-origin: 150.0px 180.0px" in style
+                )
+            elif elem_id in ["hour-hand", "minute-hand"]:
+                style = elem.get("style", "")
+                # Check for both integer and float format (150px or 150.0px)
+                assert (
+                    "transform-origin: 150px 150px" in style
+                    or "transform-origin: 150.0px 150.0px" in style
+                )
