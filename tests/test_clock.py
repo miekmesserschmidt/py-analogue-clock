@@ -426,9 +426,9 @@ class TestTransformCenters:
         clock = AnalogueClock(svg=svg)
 
         # All hands should use the general center
-        assert clock._transform_centers["hour"] == (100.0, 100.0)
-        assert clock._transform_centers["minute"] == (100.0, 100.0)
-        assert clock._transform_centers["second"] == (100.0, 100.0)
+        assert clock.transform_center_by_hand_type["hour"] == (100.0, 100.0)
+        assert clock.transform_center_by_hand_type["minute"] == (100.0, 100.0)
+        assert clock.transform_center_by_hand_type["second"] == (100.0, 100.0)
 
     def test_hand_specific_transform_center(self):
         """Test that hand-specific centers override general center."""
@@ -443,10 +443,10 @@ class TestTransformCenters:
         clock = AnalogueClock(svg=svg)
 
         # Hour and minute should use general center
-        assert clock._transform_centers["hour"] == (150.0, 150.0)
-        assert clock._transform_centers["minute"] == (150.0, 150.0)
+        assert clock.transform_center_by_hand_type["hour"] == (150.0, 150.0)
+        assert clock.transform_center_by_hand_type["minute"] == (150.0, 150.0)
         # Second hand should use its specific center
-        assert clock._transform_centers["second"] == (150.0, 180.0)
+        assert clock.transform_center_by_hand_type["second"] == (150.0, 180.0)
 
     def test_all_hand_specific_centers(self):
         """Test that all hands can have individual centers."""
@@ -461,9 +461,9 @@ class TestTransformCenters:
 
         clock = AnalogueClock(svg=svg)
 
-        assert clock._transform_centers["hour"] == (150.0, 150.0)
-        assert clock._transform_centers["minute"] == (160.0, 160.0)
-        assert clock._transform_centers["second"] == (140.0, 140.0)
+        assert clock.transform_center_by_hand_type["hour"] == (150.0, 150.0)
+        assert clock.transform_center_by_hand_type["minute"] == (160.0, 160.0)
+        assert clock.transform_center_by_hand_type["second"] == (140.0, 140.0)
 
     def test_transform_center_with_x_y_attributes(self):
         """Test that transform centers work with x/y attributes (not just cx/cy)."""
@@ -475,8 +475,8 @@ class TestTransformCenters:
 
         clock = AnalogueClock(svg=svg)
 
-        assert clock._transform_centers["hour"] == (150.0, 150.0)
-        assert clock._transform_centers["minute"] == (150.0, 150.0)
+        assert clock.transform_center_by_hand_type["hour"] == (150.0, 150.0)
+        assert clock.transform_center_by_hand_type["minute"] == (150.0, 150.0)
 
     def test_no_transform_center_uses_svg_center(self):
         """Test that SVG center is used when no transform-center elements exist."""
@@ -489,11 +489,9 @@ class TestTransformCenters:
 
         # Should fall back to SVG center (100, 100 from viewBox)
         assert clock.transform_center == (100.0, 100.0)
-        # No hand-specific centers should be set
-        assert (
-            not hasattr(clock, "_transform_centers")
-            or len(clock._transform_centers) == 0
-        )
+        assert clock.transform_center_by_hand_type["hour"] == (100.0, 100.0)
+        assert clock.transform_center_by_hand_type["minute"] == (100.0, 100.0)
+        assert clock.transform_center_by_hand_type["second"] == (100.0, 100.0)
 
     def test_transform_applied_with_hand_specific_center(self):
         """Test that transforms are applied correctly with hand-specific centers."""
@@ -528,3 +526,67 @@ class TestTransformCenters:
                     "transform-origin: 150px 150px" in style
                     or "transform-origin: 150.0px 150.0px" in style
                 )
+
+    def test_dataclass_fields_populated_from_svg(self):
+        """Test that dataclass fields are populated from SVG elements."""
+        svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+            <circle id="transform-center" cx="150" cy="150" r="5"/>
+            <circle id="transform-center-hour" cx="140" cy="140" r="5"/>
+            <circle id="transform-center-minute" cx="160" cy="160" r="5"/>
+            <circle id="transform-center-second" cx="150" cy="180" r="5"/>
+            <line id="hour-hand" x1="140" y1="140" x2="140" y2="80"/>
+            <line id="minute-hand" x1="160" y1="160" x2="160" y2="80"/>
+            <line id="second-hand" x1="150" y1="180" x2="150" y2="40"/>
+        </svg>"""
+
+        clock = AnalogueClock(svg=svg)
+
+        # Check that dataclass fields were populated from SVG
+        assert clock.transform_center == (150.0, 150.0)
+        assert clock.transform_center_hour == (140.0, 140.0)
+        assert clock.transform_center_minute == (160.0, 160.0)
+        assert clock.transform_center_second == (150.0, 180.0)
+
+    def test_dataclass_fields_not_overwritten(self):
+        """Test that provided dataclass fields are not overwritten by SVG."""
+        svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+            <circle id="transform-center" cx="150" cy="150" r="5"/>
+            <circle id="transform-center-hour" cx="140" cy="140" r="5"/>
+            <line id="hour-hand" x1="150" y1="150" x2="150" y2="80"/>
+            <line id="minute-hand" x1="150" y1="150" x2="150" y2="80"/>
+        </svg>"""
+
+        # Provide explicit transform centers that should NOT be overwritten
+        clock = AnalogueClock(
+            svg=svg,
+            transform_center=(100.0, 100.0),
+            transform_center_hour=(110.0, 110.0),
+        )
+
+        # Check that provided values were preserved
+        assert clock.transform_center == (100.0, 100.0)
+        assert clock.transform_center_hour == (110.0, 110.0)
+        # But SVG-only values should still be extracted
+        assert clock.transform_center_by_hand_type["hour"] == (110.0, 110.0)
+        assert clock.transform_center_by_hand_type["minute"] == (100.0, 100.0)
+
+    def test_dataclass_fields_used_intransform_center_by_hand_type(self):
+        """Test that programmatically provided dataclass fields are used."""
+        svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+            <line id="hour-hand" x1="150" y1="150" x2="150" y2="80"/>
+            <line id="minute-hand" x1="150" y1="150" x2="150" y2="80"/>
+            <line id="second-hand" x1="150" y1="150" x2="150" y2="80"/>
+        </svg>"""
+
+        # Provide explicit transform centers programmatically
+        clock = AnalogueClock(
+            svg=svg,
+            transform_center_hour=(120.0, 120.0),
+            transform_center_minute=(130.0, 130.0),
+            transform_center_second=(140.0, 140.0),
+        )
+
+        # Check that provided values are used
+        assert clock.transform_center_by_hand_type["hour"] == (120.0, 120.0)
+        assert clock.transform_center_by_hand_type["minute"] == (130.0, 130.0)
+        assert clock.transform_center_by_hand_type["second"] == (140.0, 140.0)
